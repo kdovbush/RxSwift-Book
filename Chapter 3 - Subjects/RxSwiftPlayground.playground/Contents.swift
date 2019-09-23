@@ -107,3 +107,103 @@ func print<T: CustomStringConvertible>(label: String, event: Event<T>) {
 //
 //
 //}
+
+// Challenge 1
+
+//example(of: "PublishSubject") {
+//  let disposeBag = DisposeBag()
+//  let dealtHand = PublishSubject<[(String, Int)]>()
+//
+//  func deal(_ cardCount: UInt) {
+//    var deck = cards
+//    var cardsRemaining = deck.count
+//    var hand = [(String, Int)]()
+//
+//    for _ in 0..<cardCount {
+//      let randomIndex = Int.random(in: 0..<cardsRemaining)
+//      hand.append(deck[randomIndex])
+//      deck.remove(at: randomIndex)
+//      cardsRemaining -= 1
+//    }
+//
+//    // Add code to update dealtHand here
+//    let pts = points(for: hand)
+//    if pts > 21 {
+//        dealtHand.onError(HandError.busted(points: pts))
+//    } else {
+//        dealtHand.onNext(hand)
+//  }
+//
+//  // Add subscription to dealtHand here
+//    dealtHand.subscribe(onNext: { element in
+//        print(cardString(for: element), points(for: element))
+//    }, onError: { error in
+//        print(error)
+//    }).disposed(by: disposeBag)
+//
+//  deal(3)
+//}
+
+// Challenge 2
+
+example(of: "BehaviorRelay") {
+    enum UserSession {
+        case loggedIn, loggedOut
+    }
+    
+    enum LoginError: Error {
+        case invalidCredentials
+    }
+    
+    let disposeBag = DisposeBag()
+    
+    // Create userSession BehaviorRelay of type UserSession with initial value of .loggedOut
+    
+    let userSession = BehaviorSubject<UserSession>(value: .loggedOut)
+    
+    // Subscribe to receive next events from userSession
+    
+    
+    userSession.subscribe(onNext: {
+        print($0)
+    }).disposed(by: disposeBag)
+    
+    func logInWith(username: String, password: String, completion: (Error?) -> Void) {
+        guard username == "johnny@appleseed.com",
+            password == "appleseed" else {
+                completion(LoginError.invalidCredentials)
+                return
+        }
+        userSession.onNext(.loggedIn)
+        
+    }
+    
+    func logOut() {
+        userSession.onNext(.loggedOut)
+    }
+    
+    func performActionRequiringLoggedInUser(_ action: () -> Void) {
+        // Ensure that userSession is loggedIn and then execute action()
+        let value = try? userSession.value()
+        if value == .loggedIn {
+            action()
+        }
+    }
+    
+    for i in 1...2 {
+        let password = i % 2 == 0 ? "appleseed" : "password"
+        
+        logInWith(username: "johnny@appleseed.com", password: password) { error in
+            guard error == nil else {
+                print(error!)
+                return
+            }
+            
+            print("User logged in.")
+        }
+        
+        performActionRequiringLoggedInUser {
+            print("Successfully did something only a logged in user can do.")
+        }
+    }
+}
