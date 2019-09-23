@@ -131,43 +131,77 @@ import RxSwift
 //		print() //	}
 //}
 
-example(of: "Single") {
-	let disposeBag = DisposeBag()
+//example(of: "Single") {
+//	let disposeBag = DisposeBag()
+//
+//	enum FileReadError: Error {
+//		case fileNotFound, unreadeble, encodingFailed
+//	}
+//
+//	func loadText(from name: String) -> Single<String> {
+//		return Single.create { single in
+//			let disposable = Disposables.create()
+//
+//			guard let path = Bundle.main.path(forResource: name, ofType: "txt") else {
+//				single(.error(FileReadError.fileNotFound))
+//				return disposable
+//			}
+//			guard let data = FileManager.default.contents(atPath: path) else {
+//				single(.error(FileReadError.unreadeble))
+//				return disposable
+//			}
+//			guard let contents = String(data: data, encoding: .utf8) else {
+//				single(.error(FileReadError.encodingFailed))
+//				return disposable
+//			}
+//			single(.success(contents))
+//			return disposable
+//		}
+//	}
+//
+//	loadText(from: "Copyright")
+//		.subscribe {
+//			switch $0 {
+//			case .success(let string):
+//				print(string)
+//			case .error(let error):
+//				print(error)
+//			}
+//	}
+//		.disposed(by: disposeBag)
+//
+//}
 
-	enum FileReadError: Error {
-		case fileNotFound, unreadeble, encodingFailed
-	}
+// MARK: - Challenge 1: Perform side effects -
 
-	func loadText(from name: String) -> Single<String> {
-		return Single.create { single in
-			let disposable = Disposables.create()
+example(of: "never1") {
+    let disposeBag = DisposeBag()
+    let observable = Observable.of(1, 2, 3)
 
-			guard let path = Bundle.main.path(forResource: name, ofType: "txt") else {
-				single(.error(FileReadError.fileNotFound))
-				return disposable
-			}
-			guard let data = FileManager.default.contents(atPath: path) else {
-				single(.error(FileReadError.unreadeble))
-				return disposable
-			}
-			guard let contents = String(data: data, encoding: .utf8) else {
-				single(.error(FileReadError.encodingFailed))
-				return disposable
-			}
-			single(.success(contents))
-			return disposable
-		}
-	}
-	
-	loadText(from: "Copyright")
-		.subscribe {
-			switch $0 {
-			case .success(let string):
-				print(string)
-			case .error(let error):
-				print(error)
-			}
-	}
-		.disposed(by: disposeBag)
+    observable
+        .debug("rx_identifier", trimOutput: false)
+        .do(onNext: {
+            print("Do \($0)")
+        }, onError: {
+            print($0)
+        }, onCompleted: {
+            print("onCompleted")
+        }, onSubscribe: {
+            print("onSubscribe")
+        }, onSubscribed: {
+            print("onSubscribed")
+        }, onDispose: {
+            print("onDispose")
+        })
+    
+    observable
+        .subscribe(onNext: { element in
+            print(element)
+        }, onCompleted: {
+            print("Completed")
+        }, onDisposed: {
+            print("onDisposable")
+        })
+        .disposed(by: disposeBag)
 
 }
